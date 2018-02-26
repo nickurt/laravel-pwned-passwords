@@ -98,7 +98,7 @@ class PwnedPasswords
         });
 
         $lines = explode("\r\n", $response);
-
+        
         foreach($lines as $line){
             list($eHashSuffix, $eFrequency) = explode(':', $line);
 
@@ -106,6 +106,8 @@ class PwnedPasswords
                 return (bool) ($eFrequency >= $this->getFrequency());
             }
         }
+
+        return false;
     }
 
     /**
