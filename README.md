@@ -1,0 +1,51 @@
+## Laravel Pwned Passwords
+
+### Installation
+Install this package with composer:
+```
+php composer.phar require nickurt/laravel-pwned-passwords:1.*
+```
+
+Add the provider to config/app.php file
+
+```php
+'nickurt\PwnedPasswords\ServiceProvider',
+```
+
+and the facade in the file
+
+```php
+'PwnedPasswords' => 'nickurt\PwnedPasswords\Facade',
+```
+
+Copy the config files for the PwnedPasswords-plugin
+
+```
+php artisan vendor:publish --provider="nickurt\PwnedPasswords\ServiceProvider" --tag="config"
+```
+
+### Examples
+
+#### Validation Rule - IsPwnedPasswords
+```php
+$validator = validator()->make(request()->all(), ['password' => [new \nickurt\PwnedPasswords\Rules\IsPwnedPasswords(
+    request()->input('password'), 100
+)]]);
+```
+The `IsPwnedPasswords` requires a `password` and an optional `frequency` parameter to validate the request.
+#### Manually Usage - IsPwnedPasswords
+```php
+$isPwnedPassword = (new \nickurt\PwnedPasswords\PwnedPasswords())
+	->setPassword('laravel-pwned-passwords')
+	->isPwnedPassword();
+	
+// ...	
+$isPwnedPassword = pwnedpassword()
+    ->setPassword('laravel-pwned-password')
+    ->isPwnedPassword();
+```
+### Tests
+```sh
+phpunit
+```
+- - - 
