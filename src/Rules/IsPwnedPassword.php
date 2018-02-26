@@ -4,7 +4,7 @@ namespace nickurt\PwnedPasswords\Rules;
 
 use Illuminate\Contracts\Validation\Rule;
 
-class IsPwnedPasswords implements Rule
+class IsPwnedPassword implements Rule
 {
     /**
      * @var
@@ -39,11 +39,11 @@ class IsPwnedPasswords implements Rule
      */
     public function passes($attribute, $value)
     {
-        $sfs = (new \nickurt\PwnedPasswords\PwnedPasswords())
+        $pwnedPassword = (new \nickurt\PwnedPasswords\PwnedPasswords())
             ->setPassword($this->password)
             ->setFrequency($this->frequency);
 
-        return $sfs->isPwnedPassword() ? false : true;
+        return $pwnedPassword->isPwnedPassword() ? false : true;
     }
 
     /**

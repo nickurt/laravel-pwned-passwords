@@ -26,14 +26,14 @@ php artisan vendor:publish --provider="nickurt\PwnedPasswords\ServiceProvider" -
 
 ### Examples
 
-#### Validation Rule - IsPwnedPasswords
+#### Validation Rule - IsPwnedPassword
 ```php
-$validator = validator()->make(request()->all(), ['password' => [new \nickurt\PwnedPasswords\Rules\IsPwnedPasswords(
+$validator = validator()->make(request()->all(), ['password' => [new \nickurt\PwnedPasswords\Rules\IsPwnedPassword(
     request()->input('password'), 100
 )]]);
 ```
 The `IsPwnedPasswords` requires a `password` and an optional `frequency` parameter to validate the request.
-#### Manually Usage - IsPwnedPasswords
+#### Manually Usage - IsPwnedPassword
 ```php
 $isPwnedPassword = (new \nickurt\PwnedPasswords\PwnedPasswords())
 	->setPassword('laravel-pwned-passwords')
