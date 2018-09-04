@@ -3,7 +3,7 @@
 ### Installation
 Install this package with composer:
 ```
-php composer.phar require nickurt/laravel-pwned-passwords:1.*
+composer require nickurt/laravel-pwned-passwords
 ```
 
 Add the provider to config/app.php file
