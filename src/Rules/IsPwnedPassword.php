@@ -31,10 +31,20 @@ class IsPwnedPassword implements Rule
     }
 
     /**
+     * Get the validation error message.
+     *
+     * @return string
+     */
+    public function message()
+    {
+        return trans('pwned-passwords::pwned-passwords.this_is_a_pwned_password');
+    }
+
+    /**
      * Determine if the validation rule passes.
      *
-     * @param  string  $attribute
-     * @param  mixed  $value
+     * @param  string $attribute
+     * @param  mixed $value
      * @return bool
      */
     public function passes($attribute, $value)
@@ -44,15 +54,5 @@ class IsPwnedPassword implements Rule
             ->setFrequency($this->frequency);
 
         return $pwnedPassword->isPwnedPassword() ? false : true;
-    }
-
-    /**
-     * Get the validation error message.
-     *
-     * @return string
-     */
-    public function message()
-    {
-        return trans('pwned-passwords::pwned-passwords.this_is_a_pwned_password');
     }
 }
