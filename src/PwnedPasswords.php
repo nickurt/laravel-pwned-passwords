@@ -7,23 +7,21 @@ use \nickurt\PwnedPasswords\Exception\MalformedURLException;
 
 class PwnedPasswords
 {
-    /**
-     * @var string
-     */
+    /** @var string */
     protected $apiUrl = 'https://api.pwnedpasswords.com';
 
-    /**
-     * @var
-     */
+    /** @var \GuzzleHttp\Client */
+    protected $client;
+
+    /** @var int */
+    protected $frequency = 10;
+
+    /** @var string */
     protected $password;
 
     /**
-     * @var
-     */
-    protected $frequency = 10;
-
-    /**
      * @return bool
+     * @throws \Exception
      */
     public function IsPwnedPassword()
     {
@@ -45,7 +43,11 @@ class PwnedPasswords
             list($eHashSuffix, $eFrequency) = explode(':', $line);
 
             if (strtoupper(substr(sha1($this->getPassword()), 5)) == $eHashSuffix) {
-                return (bool)($eFrequency >= $this->getFrequency());
+                if ($eFrequency >= $this->getFrequency()) {
+                    event(new \nickurt\PwnedPasswords\Events\IsPwnedPassword($this->getPassword()));
+
+                    return true;
+                }
             }
         }
 
@@ -53,7 +55,7 @@ class PwnedPasswords
     }
 
     /**
-     * @return mixed
+     * @return string
      */
     public function getPassword()
     {
@@ -61,22 +63,48 @@ class PwnedPasswords
     }
 
     /**
-     * @param $password
+     * @param string $password
      * @return $this
      */
     public function setPassword($password)
     {
         $this->password = $password;
+
         return $this;
     }
 
     /**
-     * @param $url
+     * @param string $url
      * @return \Psr\Http\Message\ResponseInterface
      */
     protected function getResponseData($url)
     {
-        return (new Client())->get($url);
+        return $this->getClient()->get($url);
+    }
+
+    /**
+     * @return Client
+     */
+    public function getClient()
+    {
+        if (!isset($this->client)) {
+            $this->client = new \GuzzleHttp\Client();
+
+            return $this->client;
+        }
+
+        return $this->client;
+    }
+
+    /**
+     * @param $client
+     * @return $this
+     */
+    public function setClient($client)
+    {
+        $this->client = $client;
+
+        return $this;
     }
 
     /**
@@ -88,7 +116,7 @@ class PwnedPasswords
     }
 
     /**
-     * @param $apiUrl
+     * @param string $apiUrl
      * @return $this
      */
     public function setApiUrl($apiUrl)
@@ -98,11 +126,12 @@ class PwnedPasswords
         }
 
         $this->apiUrl = $apiUrl;
+
         return $this;
     }
 
     /**
-     * @return mixed
+     * @return int
      */
     public function getFrequency()
     {
@@ -110,12 +139,13 @@ class PwnedPasswords
     }
 
     /**
-     * @param $frequency
+     * @param int $frequency
      * @return $this
      */
     public function setFrequency($frequency)
     {
         $this->frequency = $frequency;
+
         return $this;
     }
 }

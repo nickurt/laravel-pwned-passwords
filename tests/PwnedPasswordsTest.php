@@ -7,99 +7,6 @@ use PwnedPasswords;
 
 class PwnedPasswordsTest extends TestCase
 {
-    /** @test */
-    public function test_it_can_get_default_values()
-    {
-        $pwnedPasswords = new \nickurt\PwnedPasswords\PwnedPasswords();
-
-        $this->assertSame('https://api.pwnedpasswords.com', $pwnedPasswords->getApiUrl());
-        $this->assertNull($pwnedPasswords->getPassword());
-        $this->assertSame(10, $pwnedPasswords->getFrequency());
-    }
-
-    /** @test */
-    public function test_it_can_set_custom_values()
-    {
-        $pwnedPasswords = (new \nickurt\PwnedPasswords\PwnedPasswords())
-            ->setApiUrl('https://internal.api.pwnedpasswords.com')
-            ->setPassword('administrator')
-            ->setFrequency(100);
-
-        $this->assertSame('https://internal.api.pwnedpasswords.com', $pwnedPasswords->getApiUrl());
-        $this->assertSame('administrator', $pwnedPasswords->getPassword());
-        $this->assertSame(100, $pwnedPasswords->getFrequency());
-    }
-
-    /** @test */
-    public function test_it_can_work_with_helper()
-    {
-        $this->assertTrue(function_exists('pwnedpasswords'));
-
-        $this->assertInstanceOf(\nickurt\PwnedPasswords\PwnedPasswords::class, pwnedpasswords());
-    }
-
-    /** @test */
-    public function test_it_can_work_with_container()
-    {
-        $this->assertInstanceOf(\nickurt\PwnedPasswords\PwnedPasswords::class, $this->app['PwnedPasswords']);
-    }
-
-    /** @test */
-    public function test_it_can_work_with_facade()
-    {
-        $this->assertSame('nickurt\PwnedPasswords\Facade', (new \ReflectionClass(PwnedPasswords::class))->getName());
-
-        $this->assertSame('https://api.pwnedpasswords.com', PwnedPasswords::getApiUrl());
-        $this->assertNull(PwnedPasswords::getPassword());
-        $this->assertSame(10, PwnedPasswords::getFrequency());
-    }
-
-    /** @test */
-    public function test_it_will_work_with_validation_rule()
-    {
-        $val1 = $this->validate('administrator', 1000);
-
-        $this->assertFalse($val1->passes());
-        $this->assertSame(1, count($val1->messages()->get('password')));
-        $this->assertSame('This is a pwned password', $val1->messages()->first('password'));
-
-        $val2 = $this->validate('administrator', 17600);
-
-        $this->assertTrue($val2->passes());
-        $this->assertSame(0, count($val2->messages()->get('password')));
-
-        $val3 = $this->validate('', 1000);
-
-        $this->assertFalse($val3->passes());
-        $this->assertSame(1, count($val3->messages()->get('password')));
-        $this->assertSame('The password field is required.', $val3->messages()->first('password'));
-    }
-
-    /**
-     * @test
-     * @expectedException \nickurt\PwnedPasswords\Exception\MalformedURLException
-     */
-    public function test_it_will_throw_malformed_url_exception()
-    {
-        $pwnedPasswords = (new \nickurt\PwnedPasswords\PwnedPasswords())
-            ->setApiUrl('malformed_url');
-    }
-
-    /**
-     * @param $password
-     * @param $frequency
-     * @return mixed
-     */
-    protected function validate($password, $frequency)
-    {
-        return \Validator::make(
-            ['password' => $password],
-            ['password' => ['required', new \nickurt\PwnedPasswords\Rules\IsPwnedPassword(
-                $password, $frequency
-            )]]
-        );
-    }
-
     /**
      * @param \Illuminate\Foundation\Application $app
      * @return array
@@ -122,5 +29,126 @@ class PwnedPasswordsTest extends TestCase
             \Illuminate\Cache\CacheServiceProvider::class,
             \nickurt\PwnedPasswords\ServiceProvider::class
         ];
+    }
+
+    /** @test */
+    public function it_can_get_the_http_client()
+    {
+        $this->assertInstanceOf(\GuzzleHttp\Client::class, \PwnedPasswords::getClient());
+    }
+
+    /** @test */
+    public function it_can_return_the_default_values()
+    {
+        $pwnedPasswords = app('PwnedPasswords');
+
+        $this->assertSame('https://api.pwnedpasswords.com', $pwnedPasswords->getApiUrl());
+        $this->assertSame(10, $pwnedPasswords->getFrequency());
+    }
+
+    /** @test */
+    public function it_can_set_a_custom_value_for_the_api_url()
+    {
+        $pwnedPasswords = \PwnedPasswords::setApiUrl('https://api-ppe.pwnedpasswords.com');
+
+        $this->assertSame('https://api-ppe.pwnedpasswords.com', $pwnedPasswords->getApiUrl());
+    }
+
+    /** @test */
+    public function it_can_set_a_custom_value_for_the_frequency()
+    {
+        $pwnedPasswords = \PwnedPasswords::setFrequency(90);
+
+        $this->assertSame(90, $pwnedPasswords->getFrequency());
+    }
+
+    /** @test */
+    public function it_can_set_a_custom_value_for_the_password()
+    {
+        $pwnedPasswords = \PwnedPasswords::setPassword('a-erdvspdenasrswawo-llp');
+
+        $this->assertSame('a-erdvspdenasrswawo-llp', $pwnedPasswords->getPassword());
+    }
+
+    /** @test */
+    public function it_can_work_with_helper_function()
+    {
+        $this->assertInstanceOf(\nickurt\PwnedPasswords\PwnedPasswords::class, pwnedpasswords());
+    }
+
+    /** @test */
+    public function it_will_fire_is_pwned_password_event_by_a_pwned_password_via_facade()
+    {
+        \Event::fake();
+
+        \PwnedPasswords::setClient(new \GuzzleHttp\Client([
+            'handler' => new \GuzzleHttp\Handler\MockHandler([
+                new \GuzzleHttp\Psr7\Response(200, [], file_get_contents(__DIR__ . '/responses/pwned-passwords-1.txt'))
+            ]),
+        ]))->setPassword('qwertyytrewq')->isPwnedPassword();
+
+        \Event::assertDispatched(\nickurt\PwnedPasswords\Events\IsPwnedPassword::class, function ($e) {
+            return ($e->password == 'qwertyytrewq');
+        });
+    }
+
+    /** @test */
+    public function it_will_fire_is_pwned_password_event_by_a_pwned_password_via_validation_rule()
+    {
+        \Event::fake();
+
+        \PwnedPasswords::setClient(new \GuzzleHttp\Client([
+            'handler' => new \GuzzleHttp\Handler\MockHandler([
+                new \GuzzleHttp\Psr7\Response(200, [], file_get_contents(__DIR__ . '/responses/pwned-passwords-1.txt'))
+            ]),
+        ]));
+
+        $rule = new \nickurt\PwnedPasswords\Rules\IsPwnedPassword(10);
+
+        $this->assertFalse($rule->passes('password', 'qwertyytrewq'));
+
+        \Event::assertDispatched(\nickurt\PwnedPasswords\Events\IsPwnedPassword::class, function ($e) {
+            return ($e->password == 'qwertyytrewq');
+        });
+    }
+
+    /** @test */
+    public function it_will_not_fire_is_pwned_password_event_by_a_non_pwned_password_via_facade()
+    {
+        \Event::fake();
+
+        \PwnedPasswords::setClient(new \GuzzleHttp\Client([
+            'handler' => new \GuzzleHttp\Handler\MockHandler([
+                new \GuzzleHttp\Psr7\Response(200, [], file_get_contents(__DIR__ . '/responses/pwned-passwords-2.txt'))
+            ]),
+        ]))->setPassword('laravel-pwned-passwords')->isPwnedPassword();
+
+        \Event::assertNotDispatched(\nickurt\PwnedPasswords\Events\IsPwnedPassword::class);
+    }
+
+    /** @test */
+    public function it_will_not_fire_is_pwned_password_event_by_a_non_pwned_password_via_validation_rule()
+    {
+        \Event::fake();
+
+        \PwnedPasswords::setClient(new \GuzzleHttp\Client([
+            'handler' => new \GuzzleHttp\Handler\MockHandler([
+                new \GuzzleHttp\Psr7\Response(200, [], file_get_contents(__DIR__ . '/responses/pwned-passwords-2.txt'))
+            ]),
+        ]));
+
+        $rule = new \nickurt\PwnedPasswords\Rules\IsPwnedPassword(10);
+
+        $this->assertTrue($rule->passes('password', 'laravel-pwned-passwords'));
+
+        \Event::assertNotDispatched(\nickurt\PwnedPasswords\Events\IsPwnedPassword::class);
+    }
+
+    /** @test */
+    public function it_will_throw_malformed_url_exception()
+    {
+        $this->expectException(\nickurt\PwnedPasswords\Exception\MalformedURLException::class);
+
+        \PwnedPasswords::setApiUrl('malformed_url');
     }
 }

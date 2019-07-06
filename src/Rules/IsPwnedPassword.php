@@ -6,34 +6,20 @@ use Illuminate\Contracts\Validation\Rule;
 
 class IsPwnedPassword implements Rule
 {
-    /**
-     * @var
-     */
-    protected $password;
-
-    /**
-     * @var
-     */
+    /** @var int */
     protected $frequency;
 
     /**
-     * Create a new rule instance.
-     *
-     * @param $password
-     * @param $frequency
-     *
-     * @return void
+     * IsPwnedPassword constructor.
+     * @param int $frequency
      */
-    public function __construct($password, $frequency = 10)
+    public function __construct($frequency = 10)
     {
-        $this->password = $password;
         $this->frequency = $frequency;
     }
 
     /**
-     * Get the validation error message.
-     *
-     * @return string
+     * @return array|\Illuminate\Contracts\Translation\Translator|string|null
      */
     public function message()
     {
@@ -41,17 +27,15 @@ class IsPwnedPassword implements Rule
     }
 
     /**
-     * Determine if the validation rule passes.
-     *
-     * @param  string $attribute
-     * @param  mixed $value
+     * @param string $attribute
+     * @param mixed $value
      * @return bool
+     * @throws \Exception
      */
     public function passes($attribute, $value)
     {
-        $pwnedPassword = (new \nickurt\PwnedPasswords\PwnedPasswords())
-            ->setPassword($this->password)
-            ->setFrequency($this->frequency);
+        /** @var \nickurt\PwnedPasswords\PwnedPasswords $pwnedPassword */
+        $pwnedPassword = \PwnedPasswords::setPassword($value)->setFrequency($this->frequency);
 
         return $pwnedPassword->isPwnedPassword() ? false : true;
     }
