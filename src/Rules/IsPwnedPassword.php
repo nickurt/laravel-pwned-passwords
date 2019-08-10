@@ -2,7 +2,10 @@
 
 namespace nickurt\PwnedPasswords\Rules;
 
+use Exception;
+use Illuminate\Contracts\Translation\Translator;
 use Illuminate\Contracts\Validation\Rule;
+use PwnedPasswords;
 
 class IsPwnedPassword implements Rule
 {
@@ -19,7 +22,7 @@ class IsPwnedPassword implements Rule
     }
 
     /**
-     * @return array|\Illuminate\Contracts\Translation\Translator|string|null
+     * @return array|Translator|string|null
      */
     public function message()
     {
@@ -30,12 +33,12 @@ class IsPwnedPassword implements Rule
      * @param string $attribute
      * @param mixed $value
      * @return bool
-     * @throws \Exception
+     * @throws Exception
      */
     public function passes($attribute, $value)
     {
         /** @var \nickurt\PwnedPasswords\PwnedPasswords $pwnedPassword */
-        $pwnedPassword = \PwnedPasswords::setPassword($value)->setFrequency($this->frequency);
+        $pwnedPassword = PwnedPasswords::setPassword($value)->setFrequency($this->frequency);
 
         return $pwnedPassword->isPwnedPassword() ? false : true;
     }

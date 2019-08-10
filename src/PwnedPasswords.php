@@ -2,8 +2,12 @@
 
 namespace nickurt\PwnedPasswords;
 
-use \GuzzleHttp\Client;
-use \nickurt\PwnedPasswords\Exception\MalformedURLException;
+use Exception;
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\ClientException;
+use nickurt\PwnedPasswords\Events\IsPwnedPassword;
+use nickurt\PwnedPasswords\Exception\MalformedURLException;
+use nickurt\PwnedPasswords\Exception\PwnedPasswordException;
 
 class PwnedPasswords
 {
@@ -21,18 +25,18 @@ class PwnedPasswords
 
     /**
      * @return bool
-     * @throws \Exception
+     * @throws Exception
      */
-    public function IsPwnedPassword()
+    public function isPwnedPassword()
     {
         $password = substr(sha1($this->getPassword()), 0, 5);
 
         $response = cache()->remember('laravel-pwned-passwords-' . $password, 10, function () use ($password) {
-            $response = $this->getResponseData(
-                sprintf('%s/range/%s',
-                    $this->getApiUrl(),
-                    $password
-                ));
+            try {
+                $response = $this->getClient()->get($this->getApiUrl() . '/range/' . $password);
+            } catch (ClientException $e) {
+                throw new PwnedPasswordException($e->getResponse()->getBody());
+            }
 
             return ((string)$response->getBody());
         });
@@ -44,7 +48,7 @@ class PwnedPasswords
 
             if (strtoupper(substr(sha1($this->getPassword()), 5)) == $eHashSuffix) {
                 if ($eFrequency >= $this->getFrequency()) {
-                    event(new \nickurt\PwnedPasswords\Events\IsPwnedPassword($this->getPassword()));
+                    event(new IsPwnedPassword($this->getPassword(), $eFrequency));
 
                     return true;
                 }
@@ -71,15 +75,6 @@ class PwnedPasswords
         $this->password = $password;
 
         return $this;
-    }
-
-    /**
-     * @param string $url
-     * @return \Psr\Http\Message\ResponseInterface
-     */
-    protected function getResponseData($url)
-    {
-        return $this->getClient()->get($url);
     }
 
     /**
@@ -118,6 +113,7 @@ class PwnedPasswords
     /**
      * @param string $apiUrl
      * @return $this
+     * @throws MalformedURLException
      */
     public function setApiUrl($apiUrl)
     {

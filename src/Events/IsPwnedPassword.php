@@ -7,11 +7,16 @@ class IsPwnedPassword
     /** @var string */
     public $password;
 
+    /** @var int */
+    public $frequency;
+
     /**
-     * @param $password
+     * @param string $password
+     * @param int $frequency
      */
-    public function __construct($password)
+    public function __construct($password, int $frequency)
     {
         $this->password = $password;
+        $this->frequency = $frequency;
     }
 }
