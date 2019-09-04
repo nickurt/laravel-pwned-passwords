@@ -1,5 +1,4 @@
 ## Laravel Pwned Passwords
-
 [![Latest Stable Version](https://poser.pugx.org/nickurt/laravel-pwned-passwords/v/stable?format=flat-square)](https://packagist.org/packages/nickurt/laravel-pwned-passwords)
 [![MIT Licensed](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE.md)
 [![Build Status](https://img.shields.io/travis/nickurt/laravel-pwned-passwords/master.svg?style=flat-square)](https://travis-ci.org/nickurt/laravel-pwned-passwords)
@@ -10,21 +9,7 @@ Install this package with composer:
 ```
 composer require nickurt/laravel-pwned-passwords
 ```
-
-Add the provider to config/app.php file
-
-```php
-'nickurt\PwnedPasswords\ServiceProvider',
-```
-
-and the facade in the file
-
-```php
-'PwnedPasswords' => 'nickurt\PwnedPasswords\Facade',
-```
-
 Copy the config files for the PwnedPasswords-plugin
-
 ```
 php artisan vendor:publish --provider="nickurt\PwnedPasswords\ServiceProvider" --tag="config"
 ```
