@@ -1,8 +1,8 @@
 ## Laravel Pwned Passwords
-[![Latest Stable Version](https://poser.pugx.org/nickurt/laravel-pwned-passwords/v/stable?format=flat-square)](https://packagist.org/packages/nickurt/laravel-pwned-passwords)
-[![MIT Licensed](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE.md)
-[![Build Status](https://img.shields.io/travis/nickurt/laravel-pwned-passwords/master.svg?style=flat-square)](https://travis-ci.org/nickurt/laravel-pwned-passwords)
-[![Total Downloads](https://img.shields.io/packagist/dt/nickurt/laravel-pwned-passwords.svg?style=flat-square)](https://packagist.org/packages/nickurt/laravel-pwned-passwords)
+[![Build Status](https://github.com/nickurt/laravel-pwned-passwords/workflows/tests/badge.svg)](https://github.com/nickurt/laravel-pwned-passwords/actions)
+[![Total Downloads](https://poser.pugx.org/nickurt/laravel-pwned-passwords/d/total.svg)](https://packagist.org/packages/nickurt/laravel-plesk)
+[![Latest Stable Version](https://poser.pugx.org/nickurt/laravel-pwned-passwords/v/stable.svg)](https://packagist.org/packages/nickurt/laravel-plesk)
+[![MIT Licensed](https://poser.pugx.org/nickurt/laravel-pwned-passwords/license.svg)](LICENSE.md)
 
 ### Installation
 Install this package with composer:
