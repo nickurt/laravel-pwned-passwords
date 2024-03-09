@@ -2,6 +2,10 @@
 
 All notable changes to `laravel-pwned-passwords` will be documented in this file
 
+## 1.11.0 - 2024-03-09
+
+- Adding support for Laravel 11
+
 ## 1.10.0 - 2023-02-27
 
 - Adding support for Laravel 10
