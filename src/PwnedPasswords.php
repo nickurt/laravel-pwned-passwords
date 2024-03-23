@@ -3,8 +3,7 @@
 namespace nickurt\PwnedPasswords;
 
 use Exception;
-use GuzzleHttp\Client;
-use GuzzleHttp\Exception\ClientException;
+use Illuminate\Support\Facades\Http;
 use nickurt\PwnedPasswords\Events\IsPwnedPassword;
 use nickurt\PwnedPasswords\Exception\MalformedURLException;
 use nickurt\PwnedPasswords\Exception\PwnedPasswordException;
@@ -14,9 +13,6 @@ class PwnedPasswords
     /** @var string */
     protected $apiUrl = 'https://api.pwnedpasswords.com';
 
-    /** @var \GuzzleHttp\Client */
-    protected $client;
-
     /** @var int */
     protected $frequency = 10;
 
@@ -25,26 +21,27 @@ class PwnedPasswords
 
     /**
      * @return bool
+     *
      * @throws Exception
      */
     public function isPwnedPassword()
     {
         $password = substr(sha1($this->getPassword()), 0, 5);
 
-        $response = cache()->remember('laravel-pwned-passwords-' . $password, 10, function () use ($password) {
+        $response = cache()->remember('laravel-pwned-passwords-'.$password, 10, function () use ($password) {
             try {
-                $response = $this->getClient()->get($this->getApiUrl() . '/range/' . $password);
-            } catch (ClientException $e) {
-                throw new PwnedPasswordException($e->getResponse()->getBody());
+                $response = Http::get($this->getApiUrl().'/range/'.$password);
+            } catch (\Exception $e) {
+                throw new PwnedPasswordException($e->getMessage());
             }
 
-            return ((string)$response->getBody());
+            return $response->body();
         });
 
         $lines = explode("\r\n", $response);
 
         foreach ($lines as $line) {
-            list($eHashSuffix, $eFrequency) = explode(':', $line);
+            [$eHashSuffix, $eFrequency] = explode(':', $line);
 
             if (strtoupper(substr(sha1($this->getPassword()), 5)) == $eHashSuffix) {
                 if ($eFrequency >= $this->getFrequency()) {
@@ -67,37 +64,12 @@ class PwnedPasswords
     }
 
     /**
-     * @param string $password
+     * @param  string  $password
      * @return $this
      */
     public function setPassword($password)
     {
         $this->password = $password;
-
-        return $this;
-    }
-
-    /**
-     * @return Client
-     */
-    public function getClient()
-    {
-        if (!isset($this->client)) {
-            $this->client = new \GuzzleHttp\Client();
-
-            return $this->client;
-        }
-
-        return $this->client;
-    }
-
-    /**
-     * @param $client
-     * @return $this
-     */
-    public function setClient($client)
-    {
-        $this->client = $client;
 
         return $this;
     }
@@ -111,8 +83,9 @@ class PwnedPasswords
     }
 
     /**
-     * @param string $apiUrl
+     * @param  string  $apiUrl
      * @return $this
+     *
      * @throws MalformedURLException
      */
     public function setApiUrl($apiUrl)
@@ -135,7 +108,7 @@ class PwnedPasswords
     }
 
     /**
-     * @param int $frequency
+     * @param  int  $frequency
      * @return $this
      */
     public function setFrequency($frequency)

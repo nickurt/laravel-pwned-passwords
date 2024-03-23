@@ -11,10 +11,10 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
      */
     public function boot()
     {
-        $this->loadTranslationsFrom(__DIR__ . '/../src/Resources/Lang', 'pwned-passwords');
+        $this->loadTranslationsFrom(__DIR__.'/../src/Resources/Lang', 'pwned-passwords');
 
         $this->publishes([
-            __DIR__ . '/../src/Resources/Lang' => resource_path('lang/vendor/pwned-passwords'),
+            __DIR__.'/../src/Resources/Lang' => resource_path('lang/vendor/pwned-passwords'),
         ], 'config');
     }
 

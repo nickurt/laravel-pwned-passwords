@@ -11,8 +11,7 @@ class IsPwnedPassword
     public $frequency;
 
     /**
-     * @param string $password
-     * @param int $frequency
+     * @param  string  $password
      */
     public function __construct($password, int $frequency)
     {

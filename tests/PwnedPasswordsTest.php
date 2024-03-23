@@ -1,20 +1,18 @@
 <?php
 
-namespace nickurt\PwnedPasswords\Tests;
+namespace nickurt\PwnedPasswords\tests;
 
-use Event;
-use GuzzleHttp\Client;
-use GuzzleHttp\Handler\MockHandler;
-use GuzzleHttp\Psr7\Response;
 use Illuminate\Cache\CacheServiceProvider;
 use Illuminate\Foundation\Application;
+use Illuminate\Http\Client\HttpClientException;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Http;
 use nickurt\PwnedPasswords\Events\IsPwnedPassword;
 use nickurt\PwnedPasswords\Exception\MalformedURLException;
-use nickurt\PwnedPasswords\Facade;
+use nickurt\PwnedPasswords\Facade as PwnedPasswords;
 use nickurt\PwnedPasswords\ServiceProvider;
 use Orchestra\Testbench\TestCase;
-use PwnedPasswords;
 
 class PwnedPasswordsTest extends TestCase
 {
@@ -23,8 +21,6 @@ class PwnedPasswordsTest extends TestCase
 
     /**
      * Setup the test environment.
-     *
-     * @return void
      */
     public function setUp(): void
     {
@@ -34,14 +30,7 @@ class PwnedPasswordsTest extends TestCase
         $this->pwnedPassword = PwnedPasswords::getFacadeRoot();
     }
 
-    /** @test */
-    public function it_can_get_the_http_client()
-    {
-        $this->assertInstanceOf(Client::class, $this->pwnedPassword->getClient());
-    }
-
-    /** @test */
-    public function it_can_return_the_default_values()
+    public function test_it_can_return_the_default_values()
     {
         $pwnedPasswords = app('PwnedPasswords');
 
@@ -49,48 +38,39 @@ class PwnedPasswordsTest extends TestCase
         $this->assertSame(10, $pwnedPasswords->getFrequency());
     }
 
-    /** @test */
-    public function it_can_set_a_custom_value_for_the_api_url()
+    public function test_it_can_set_a_custom_value_for_the_api_url()
     {
         $this->pwnedPassword->setApiUrl('https://api-ppe.pwnedpasswords.com');
 
         $this->assertSame('https://api-ppe.pwnedpasswords.com', $this->pwnedPassword->getApiUrl());
     }
 
-    /** @test */
-    public function it_can_set_a_custom_value_for_the_frequency()
+    public function test_it_can_set_a_custom_value_for_the_frequency()
     {
         $this->pwnedPassword->setFrequency(90);
 
         $this->assertSame(90, $this->pwnedPassword->getFrequency());
     }
 
-    /** @test */
-    public function it_can_set_a_custom_value_for_the_password()
+    public function test_it_can_set_a_custom_value_for_the_password()
     {
         $this->pwnedPassword->setPassword('a-erdvspdenasrswawo-llp');
 
         $this->assertSame('a-erdvspdenasrswawo-llp', $this->pwnedPassword->getPassword());
     }
 
-    /** @test */
-    public function it_can_work_with_helper_function()
+    public function test_it_can_work_with_helper_function()
     {
         $this->assertInstanceOf(\nickurt\PwnedPasswords\PwnedPasswords::class, pwnedpasswords());
     }
 
-    /** @test */
-    public function it_will_fire_is_pwned_password_event_by_a_pwned_password_via_facade()
+    public function test_it_will_fire_is_pwned_password_event_by_a_pwned_password_via_facade()
     {
         Event::fake();
 
-        $this->pwnedPassword->setClient(new Client([
-            'handler' => new MockHandler([
-                new Response(200, [], file_get_contents(__DIR__ . '/responses/pwned-passwords-1.txt'))
-            ]),
-        ]))->setPassword('qwertyytrewq')->isPwnedPassword();
+        Http::fake(['https://api.pwnedpasswords.com/range/8fba5' => Http::response(file_get_contents(__DIR__.'/responses/pwned-passwords-1.txt'))]);
 
-        $this->assertSame('https://api.pwnedpasswords.com/range/8fba5', (string)$this->pwnedPassword->getClient()->getConfig()['handler']->getLastRequest()->getUri());
+        $this->pwnedPassword->setPassword('qwertyytrewq')->isPwnedPassword();
 
         Event::assertDispatched(IsPwnedPassword::class, function ($e) {
             $this->assertSame(8185, $e->frequency);
@@ -100,16 +80,11 @@ class PwnedPasswordsTest extends TestCase
         });
     }
 
-    /** @test */
-    public function it_will_fire_is_pwned_password_event_by_a_pwned_password_via_validation_rule()
+    public function test_it_will_fire_is_pwned_password_event_by_a_pwned_password_via_validation_rule()
     {
         Event::fake();
 
-        $this->pwnedPassword->setClient(new Client([
-            'handler' => new MockHandler([
-                new Response(200, [], file_get_contents(__DIR__ . '/responses/pwned-passwords-1.txt'))
-            ]),
-        ]));
+        Http::fake(['https://api.pwnedpasswords.com/range/8fba5' => Http::response(file_get_contents(__DIR__.'/responses/pwned-passwords-1.txt'))]);
 
         $rule = new \nickurt\PwnedPasswords\Rules\IsPwnedPassword(10);
 
@@ -124,32 +99,22 @@ class PwnedPasswordsTest extends TestCase
         });
     }
 
-    /** @test */
-    public function it_will_not_fire_is_pwned_password_event_by_a_non_pwned_password_via_facade()
+    public function test_it_will_not_fire_is_pwned_password_event_by_a_non_pwned_password_via_facade()
     {
         Event::fake();
 
-        $this->pwnedPassword->setClient(new Client([
-            'handler' => new MockHandler([
-                new Response(200, [], file_get_contents(__DIR__ . '/responses/pwned-passwords-2.txt'))
-            ]),
-        ]))->setPassword('laravel-pwned-passwords')->isPwnedPassword();
+        Http::fake(['https://api.pwnedpasswords.com/range/3849a' => Http::response(file_get_contents(__DIR__.'/responses/pwned-passwords-2.txt'))]);
 
-        $this->assertSame('https://api.pwnedpasswords.com/range/3849a', (string)$this->pwnedPassword->getClient()->getConfig()['handler']->getLastRequest()->getUri());
+        $this->pwnedPassword->setPassword('laravel-pwned-passwords')->isPwnedPassword();
 
         Event::assertNotDispatched(IsPwnedPassword::class);
     }
 
-    /** @test */
-    public function it_will_not_fire_is_pwned_password_event_by_a_non_pwned_password_via_validation_rule()
+    public function test_it_will_not_fire_is_pwned_password_event_by_a_non_pwned_password_via_validation_rule()
     {
         Event::fake();
 
-        $this->pwnedPassword->setClient(new Client([
-            'handler' => new MockHandler([
-                new Response(200, [], file_get_contents(__DIR__ . '/responses/pwned-passwords-2.txt'))
-            ]),
-        ]));
+        Http::fake(['https://api.pwnedpasswords.com/range/3849a' => Http::response(file_get_contents(__DIR__.'/responses/pwned-passwords-2.txt'))]);
 
         $rule = new \nickurt\PwnedPasswords\Rules\IsPwnedPassword(10);
 
@@ -158,25 +123,19 @@ class PwnedPasswordsTest extends TestCase
         Event::assertNotDispatched(IsPwnedPassword::class);
     }
 
-    /** @test */
-    public function it_will_throw_pwned_password_exception_if_hash_prefix_was_not_in_a_valid_format()
+    public function test_it_will_throw_pwned_password_exception_if_hash_prefix_was_not_in_a_valid_format()
     {
         // 400 https://api.pwnedpasswords.com/range/invalid
+
+        Http::fake(['https://api.pwnedpasswords.com/range/81f34' => fn () => throw new HttpClientException('The hash prefix was not in a valid format', 400)]);
 
         $this->expectException(\nickurt\PwnedPasswords\Exception\PwnedPasswordException::class);
         $this->expectExceptionMessage('The hash prefix was not in a valid format');
 
-        $this->pwnedPassword->setClient(new Client([
-            'handler' => MockHandler::createWithMiddleware([
-                new Response(400, [], 'The hash prefix was not in a valid format')
-            ]),
-        ]));
-
         $this->pwnedPassword->setPassword('invalid')->isPwnedPassword();
     }
 
-    /** @test */
-    public function it_will_throw_malformed_url_exception()
+    public function test_it_will_throw_malformed_url_exception()
     {
         $this->expectException(MalformedURLException::class);
 
@@ -184,26 +143,26 @@ class PwnedPasswordsTest extends TestCase
     }
 
     /**
-     * @param Application $app
+     * @param  Application  $app
      * @return array
      */
     protected function getPackageAliases($app)
     {
         return [
             'Cache' => Cache::class,
-            'PwnedPasswords' => Facade::class
+            'PwnedPasswords' => PwnedPasswords::class,
         ];
     }
 
     /**
-     * @param Application $app
+     * @param  Application  $app
      * @return array
      */
     protected function getPackageProviders($app)
     {
         return [
             CacheServiceProvider::class,
-            ServiceProvider::class
+            ServiceProvider::class,
         ];
     }
 }

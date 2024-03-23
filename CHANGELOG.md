@@ -2,6 +2,10 @@
 
 All notable changes to `laravel-pwned-passwords` will be documented in this file
 
+## 2.0.0 - 2024-xx-xx
+
+- Refactor'd Guzzle HttpClient to Laravel's native Http Client
+
 ## 1.11.0 - 2024-03-09
 
 - Adding support for Laravel 11
