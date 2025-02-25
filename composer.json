@@ -1,11 +1,11 @@
 {
     "name": "nickurt/laravel-pwned-passwords",
-    "description": "PwnedPasswords for Laravel 10.x/11.x",
+    "description": "PwnedPasswords for Laravel 10.x/11.x/12.x",
     "keywords": ["pwned-passwords", "haveibeenpwned", "laravel"],
     "license": "MIT",
     "require": {
         "php": "^8.2",
-        "laravel/framework": "^10.0|^11.0",
+        "laravel/framework": "^10.0|^11.0|^12.0",
         "guzzlehttp/guzzle": "^7.8.1"
     },
     "require-dev": {
