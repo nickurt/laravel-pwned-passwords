@@ -1,10 +1,10 @@
 name: tests
 
 on:
-  push:
-  pull_request:
-  schedule:
-    - cron: '0 0 * * *'
+    push:
+    pull_request:
+    schedule:
+        - cron: '0 0 * * *'
 
 jobs:
     php-tests:
@@ -12,23 +12,15 @@ jobs:
 
         strategy:
             matrix:
-                php: [8.3, 8.2]
-                laravel: [11.*, 12.*]
+                php: [8.4]
+                laravel: [12.*, 13.*]
                 dependency-version: [prefer-lowest, prefer-stable]
                 os: [ubuntu-latest]
                 include:
+                    - laravel: 13.*
+                      testbench: 11.*
                     - laravel: 12.*
                       testbench: 10.*
-                      dependency-version: prefer-lowest
-                    - laravel: 12.*
-                      testbench: 10.*
-                      dependency-version: prefer-stable
-                    - laravel: 11.*
-                      testbench: 9.*
-                      dependency-version: prefer-lowest
-                    - laravel: 11.*
-                      testbench: 9.*
-                      dependency-version: prefer-stable
 
         name: P${{ matrix.php }} - L${{ matrix.laravel }} - ${{ matrix.dependency-version }}
 
